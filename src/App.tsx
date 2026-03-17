@@ -597,7 +597,7 @@ function App() {
             </svg>
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-bold tracking-tight leading-none truncate">Muck Savage</h1>
+           <h1 className="text-lg font-bold tracking-tight leading-none truncate text-foreground">Muck Savage</h1>
             <p className="text-[11px] text-muted-foreground tracking-widest uppercase mt-0.5">Session Sage</p>
           </div>
         </div>
