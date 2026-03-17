@@ -587,7 +587,7 @@ function App() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       <header className="border-b border-border px-4 py-3 flex items-center justify-between flex-shrink-0"
         style={{ background: 'linear-gradient(180deg, hsl(30,12%,10%) 0%, hsl(30,15%,7%) 100%)' }}>
         <div className="flex items-center gap-3">
@@ -621,7 +621,7 @@ function App() {
         </Tabs>
       </div>
 
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-hidden">
         {tab === 'repertoire' ? (
           <RepertoirePanel songs={data.songs} onAdd={() => setShowSongForm(true)}
             onEdit={setEditingSong} onDelete={setDeletingId} onStatusChange={changeStatus} />
