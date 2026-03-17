@@ -1,40 +1,33 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { AppData } from '../types';
+import { sanityClient } from '../lib/sanityClient';
 
-const STORAGE_KEY = 'session-sage-data';
-const POLL_INTERVAL = 5000;
+const DOC_ID = 'muckSavageData';
+const POLL_INTERVAL = 10000;
 
 const DEFAULT_DATA: AppData = {
   songs: [],
   setLists: [],
-  bandName: 'Our Band',
+  bandName: 'Muck Savage',
 };
 
-// Use window.storage (artifact persistent storage) if available, else localStorage fallback
-const storage = {
-  async get(key: string): Promise<string | null> {
-    if ((window as any).storage) {
-      try {
-        const result = await (window as any).storage.get(key, true);
-        return result?.value ?? null;
-      } catch {
-        return null;
-      }
-    }
-    return localStorage.getItem(key);
-  },
-  async set(key: string, value: string): Promise<void> {
-    if ((window as any).storage) {
-      try {
-        await (window as any).storage.set(key, value, true);
-      } catch {
-        localStorage.setItem(key, value);
-      }
-    } else {
-      localStorage.setItem(key, value);
-    }
-  },
-};
+async function fetchFromSanity(): Promise<AppData | null> {
+  const doc = await sanityClient.fetch(
+    `*[_id == $id][0]{ songs, setLists, bandName }`,
+    { id: DOC_ID }
+  );
+  return doc ?? null;
+}
+
+async function saveToSanity(data: AppData): Promise<void> {
+  await sanityClient.createOrReplace({
+    _id: DOC_ID,
+    _type: 'bandData',
+    songs: data.songs,
+    setLists: data.setLists,
+    bandName: data.bandName,
+  });
+}
 
 export function useSharedData() {
   const [data, setData] = useState<AppData>(DEFAULT_DATA);
@@ -43,13 +36,12 @@ export function useSharedData() {
 
   const loadData = useCallback(async () => {
     try {
-      const raw = await storage.get(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as AppData;
-        const serialized = JSON.stringify(parsed);
+      const remote = await fetchFromSanity();
+      if (remote) {
+        const serialized = JSON.stringify(remote);
         if (serialized !== lastSaved.current) {
           lastSaved.current = serialized;
-          setData(parsed);
+          setData(remote);
         }
       }
     } catch (e) {
@@ -64,7 +56,7 @@ export function useSharedData() {
     lastSaved.current = serialized;
     setData(newData);
     try {
-      await storage.set(STORAGE_KEY, serialized);
+      await saveToSanity(newData);
     } catch (e) {
       console.error('Failed to save data:', e);
     }

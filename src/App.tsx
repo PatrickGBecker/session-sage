@@ -550,25 +550,6 @@ function ConfirmDlg({ open, onClose, onConfirm, title, desc }: {
   );
 }
 
-// ─── Band Name Dialog ────────────────────────────────────────────────
-function BandNameDlg({ open, onClose, currentName, onSave }: {
-  open: boolean; onClose: () => void; currentName: string; onSave: (n: string) => void;
-}) {
-  const [name, setName] = useState(currentName);
-  return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className={`max-w-sm ${dialogBg}`}>
-        <DialogHeader><DialogTitle>Band Name</DialogTitle><DialogDescription>Set your band's name.</DialogDescription></DialogHeader>
-        <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-secondary border-border" autoFocus />
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button onClick={() => { onSave(name.trim() || 'Our Band'); onClose(); }} className={greenBtn}>Save</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // ─── Main App ────────────────────────────────────────────────────────
 function App() {
   const { data, saveData, loading } = useSharedData();
@@ -576,7 +557,6 @@ function App() {
   const [showSongForm, setShowSongForm] = useState(false);
   const [editingSong, setEditingSong] = useState<Song | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [showBandName, setShowBandName] = useState(false);
 
   const addSong = useCallback((s: Omit<Song, 'id' | 'createdAt'>) => {
     saveData({ ...data, songs: [...data.songs, { ...s, id: generateId(), createdAt: Date.now() }] });
@@ -607,7 +587,7 @@ function App() {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b border-border px-4 py-3 flex items-center justify-between flex-shrink-0"
         style={{ background: 'linear-gradient(180deg, hsl(30,12%,10%) 0%, hsl(30,15%,7%) 100%)' }}>
         <div className="flex items-center gap-3">
@@ -617,9 +597,7 @@ function App() {
             </svg>
           </div>
           <div className="min-w-0">
-            <button onClick={() => setShowBandName(true)} className="hover:text-[hsl(145,45%,52%)] transition-colors">
-              <h1 className="text-lg font-bold tracking-tight leading-none truncate">{data.bandName}</h1>
-            </button>
+            <h1 className="text-lg font-bold tracking-tight leading-none truncate">Muck Savage</h1>
             <p className="text-[11px] text-muted-foreground tracking-widest uppercase mt-0.5">Session Sage</p>
           </div>
         </div>
@@ -643,7 +621,7 @@ function App() {
         </Tabs>
       </div>
 
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-auto">
         {tab === 'repertoire' ? (
           <RepertoirePanel songs={data.songs} onAdd={() => setShowSongForm(true)}
             onEdit={setEditingSong} onDelete={setDeletingId} onStatusChange={changeStatus} />
@@ -656,8 +634,7 @@ function App() {
       {editingSong && <SongForm open={true} onClose={() => setEditingSong(null)} onSave={editSong} initial={editingSong} mode="edit" />}
       {deletingId && <ConfirmDlg open={true} onClose={() => setDeletingId(null)} onConfirm={() => deleteSong(deletingId)}
         title="Delete Song" desc="This will remove this piece from your repertoire and all set lists." />}
-      <BandNameDlg open={showBandName} onClose={() => setShowBandName(false)} currentName={data.bandName}
-        onSave={(n) => saveData({ ...data, bandName: n })} />
+
     </div>
   );
 }
